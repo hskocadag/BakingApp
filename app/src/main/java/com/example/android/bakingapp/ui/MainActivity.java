@@ -1,4 +1,4 @@
-package com.example.android.bakingapp;
+package com.example.android.bakingapp.ui;
 
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
@@ -13,6 +13,9 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
+import com.example.android.bakingapp.R;
+import com.example.android.bakingapp.RecipeAdapter;
+import com.example.android.bakingapp.RecipeWidgetProvider;
 import com.example.android.bakingapp.data.RecipeData;
 import com.example.android.bakingapp.model.Recipe;
 import com.example.android.bakingapp.utilities.NetworkUtils;

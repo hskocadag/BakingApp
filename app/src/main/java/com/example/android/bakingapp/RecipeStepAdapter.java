@@ -50,7 +50,10 @@ public class RecipeStepAdapter extends RecyclerView.Adapter<RecipeStepAdapter.Re
             return;
 
         String recipeShortDesc = mRecipeSteps.get(position).getShortDescription();
-        holder.mRecipeStepShortDesc.setText(recipeShortDesc);
+        if (position >= 1)
+            holder.mRecipeStepShortDesc.setText(Integer.toString(position -1 ) + ". " + recipeShortDesc);
+        else
+            holder.mRecipeStepShortDesc.setText(Integer.toString(0 ) + ". " + recipeShortDesc);
     }
 
     @Override

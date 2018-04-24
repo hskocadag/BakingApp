@@ -1,15 +1,13 @@
-package com.example.android.bakingapp;
+package com.example.android.bakingapp.ui;
 
-import android.app.FragmentTransaction;
 import android.content.Intent;
-import android.content.res.Configuration;
-import android.os.Parcelable;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.Toast;
+
+import com.example.android.bakingapp.R;
+import com.example.android.bakingapp.RecipeStepAdapter;
+import com.example.android.bakingapp.data.RecipeData;
 
 public class RecipeDetailActivity extends AppCompatActivity implements RecipeStepAdapter.OnRecipeStepClickListener {
 
@@ -35,12 +33,14 @@ public class RecipeDetailActivity extends AppCompatActivity implements RecipeSte
             Bundle b = intent.getExtras();
             mRecipeId = b.getInt(RecipeStepListFragment.RECIPE_ID, -1);
         }
-            FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentManager fragmentManager = getSupportFragmentManager();
         RecipeStepListFragment recipeStepListFragment = new RecipeStepListFragment();
         recipeStepListFragment.setRecipeId(mRecipeId);
         fragmentManager.beginTransaction()
                 .replace(R.id.master_list_fragment, recipeStepListFragment)
                 .commit();
+
+        getSupportActionBar().setTitle(RecipeData.Recipes.get(mRecipeId).getName());
 
         if(findViewById(R.id.baking_app_linear_layout) != null) {
             mTwoPane = true;

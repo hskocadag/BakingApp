@@ -1,4 +1,4 @@
-package com.example.android.bakingapp;
+package com.example.android.bakingapp.ui;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -6,10 +6,9 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -23,6 +22,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.android.bakingapp.R;
+import com.example.android.bakingapp.RecipeStepAdapter;
 import com.example.android.bakingapp.data.RecipeData;
 import com.example.android.bakingapp.model.Step;
 import com.google.android.exoplayer2.DefaultLoadControl;
@@ -55,10 +56,11 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     private static MediaSessionCompat mMediaSession;
     private PlaybackStateCompat.Builder mStateBuilder;
     private TextView mRecipeLongDesc;
-    private FloatingActionButton mNextButton;
-    private FloatingActionButton mPrevButton;
+    private Button mNextButton;
+    private Button mPrevButton;
     private RecipeStepAdapter.OnRecipeStepClickListener mOnRecipeStepClickListener;
     private boolean hasVideo;
+    private LinearLayout mButtonPanel;
 
     private final String RECIPE_STEP_ID_STATE_KEY = "RECIPE_STEP_ID_STATE_KEY";
     private final String RECIPE_ID_STATE_KEY = "RECIPE_ID_STATE_KEY";
@@ -82,8 +84,9 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
 
         mPlayerView = (SimpleExoPlayerView) rootView.findViewById(R.id.playerView);
         mRecipeLongDesc = (TextView) rootView.findViewById(R.id.tv_recipe_step_long_desc);
-        mNextButton = (FloatingActionButton) rootView.findViewById(R.id.next_button);
-        mPrevButton = (FloatingActionButton) rootView.findViewById(R.id.prev_button);
+        mNextButton = (Button) rootView.findViewById(R.id.next_button);
+        mPrevButton = (Button) rootView.findViewById(R.id.prev_button);
+        mButtonPanel = (LinearLayout) rootView.findViewById(R.id.button_panel);
 
         initializeMediaSession();
 
@@ -142,7 +145,7 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
                 }
             });
         } else {
-            mPrevButton.setVisibility(View.GONE);
+            mPrevButton.setVisibility(View.INVISIBLE);
         }
         if(mRecipeStepId != stepCount -1) {
             mNextButton.setVisibility(View.VISIBLE);
@@ -160,7 +163,7 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
                 }
             });
         } else {
-            mNextButton.setVisibility(View.GONE);
+            mNextButton.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -170,7 +173,7 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
         if (!RecipeDetailActivity.isTwoPane() && hasVideo && newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             //First Hide other objects (listview or recyclerview), better hide them using Gone.
             showHideViews(false);
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mPlayerView.getLayoutParams();
+            ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) mPlayerView.getLayoutParams();
             params.width=params.MATCH_PARENT;
             params.height=params.MATCH_PARENT;
             mPlayerView.setLayoutParams(params);
@@ -178,7 +181,7 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
             //unhide your objects here.
             showHideViews(true);
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mPlayerView.getLayoutParams();
+            ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) mPlayerView.getLayoutParams();
             params.width=params.MATCH_PARENT;
             params.height=600;
             mPlayerView.setLayoutParams(params);
@@ -189,12 +192,11 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     {
         if(show) {
             mRecipeLongDesc.setVisibility(View.VISIBLE);
-            mNextButton.setVisibility(View.VISIBLE);
-            mPrevButton.setVisibility(View.VISIBLE);
+            mButtonPanel.setVisibility(View.VISIBLE);
         } else {
-            mRecipeLongDesc.setVisibility(View.GONE);
-            mNextButton.setVisibility(View.GONE);
-            mPrevButton.setVisibility(View.GONE);
+
+            mRecipeLongDesc.setVisibility(View.INVISIBLE);
+            mButtonPanel.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -284,7 +286,7 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     }
 
     @Override
-    public void onTimelineChanged(Timeline timeline, Object manifest) {
+    public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
 
     }
 

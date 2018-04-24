@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.widget.RemoteViews;
 
+import com.example.android.bakingapp.ui.RecipeDetailActivity;
+
 /**
  * Implementation of App Widget functionality.
  */
