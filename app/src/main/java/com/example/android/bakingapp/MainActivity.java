@@ -1,5 +1,7 @@
 package com.example.android.bakingapp;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
@@ -90,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements RecipeAdapter.Gri
             mListState = state.getParcelable(LIST_STATE_KEY);
     }
 
-    private class DownloadRecipesTask extends AsyncTask<URL, Integer, List<Recipe>> {
+    public class DownloadRecipesTask extends AsyncTask<URL, Integer, List<Recipe>> {
         protected List<Recipe> doInBackground(URL... urls) {
             try {
                 String recipesJSON = NetworkUtils.getResponseFromHttpUrl(NetworkUtils.buildUrl());
@@ -125,6 +127,10 @@ public class MainActivity extends AppCompatActivity implements RecipeAdapter.Gri
             mRecipeAdapter.updateRecipesArray(mRecipes);
             mErrorMessage.setVisibility(View.GONE);
             mRecipesRecyclerView.setVisibility(View.VISIBLE);
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(MainActivity.this);
+            int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(MainActivity.this, RecipeWidgetProvider.class));
+            //Trigger data update to handle the GridView widgets and force a data refresh
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_grid_view);
         }
     }
 }
