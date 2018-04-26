@@ -29,9 +29,11 @@
         android:orientation="horizontal">
 
         <ImageButton android:id="@id/exo_play"
+            android:contentDescription="@string/play_button"
             style="@style/ExoMediaButton.Play"/>
 
         <ImageButton android:id="@id/exo_pause"
+            android:contentDescription="@string/stop_button"
             style="@style/ExoMediaButton.Pause"/>
 
     </LinearLayout>

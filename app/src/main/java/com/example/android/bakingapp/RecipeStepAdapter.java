@@ -1,8 +1,6 @@
 package com.example.android.bakingapp;
 
 import android.content.Context;
-import android.content.Intent;
-import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,10 +48,20 @@ public class RecipeStepAdapter extends RecyclerView.Adapter<RecipeStepAdapter.Re
             return;
 
         String recipeShortDesc = mRecipeSteps.get(position).getShortDescription();
-        if (position >= 1)
-            holder.mRecipeStepShortDesc.setText(Integer.toString(position -1 ) + ". " + recipeShortDesc);
-        else
-            holder.mRecipeStepShortDesc.setText(Integer.toString(0 ) + ". " + recipeShortDesc);
+        if (position >= 1) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(Integer.toString(position - 1))
+                    .append(". ")
+                    .append(recipeShortDesc);
+            holder.mRecipeStepShortDesc.setText(sb.toString());
+        }
+        else {
+            StringBuilder sb = new StringBuilder();
+            sb.append(Integer.toString(0))
+                    .append(". ")
+                    .append(recipeShortDesc);
+            holder.mRecipeStepShortDesc.setText(sb.toString());
+        }
     }
 
     @Override

@@ -29,7 +29,7 @@ public class RecipeDetailActivity extends AppCompatActivity implements RecipeSte
         if(savedInstanceState != null) {
             mRecipeId = savedInstanceState.getInt(RECIPE_ID_STATE_KEY);
             mRecipeStepId = savedInstanceState.getInt(RECIPE_STEP_ID_STATE_KEY, 0);
-        } else if(intent != null) {
+        } else if(intent != null && intent.getExtras() != null) {
             Bundle b = intent.getExtras();
             mRecipeId = b.getInt(RecipeStepListFragment.RECIPE_ID, -1);
         }
@@ -40,7 +40,13 @@ public class RecipeDetailActivity extends AppCompatActivity implements RecipeSte
                 .replace(R.id.master_list_fragment, recipeStepListFragment)
                 .commit();
 
-        getSupportActionBar().setTitle(RecipeData.Recipes.get(mRecipeId).getName());
+        if(getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(RecipeData.Recipes.get(mRecipeId).getName());
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        } else if(getActionBar() != null) {
+            getActionBar().setTitle(RecipeData.Recipes.get(mRecipeId).getName());
+            getActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         if(findViewById(R.id.baking_app_linear_layout) != null) {
             mTwoPane = true;

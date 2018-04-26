@@ -20,9 +20,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.RecipeDetailActivity" />
+        <activity android:name=".ui.RecipeDetailActivity" android:parentActivityName=".ui.MainActivity" />
         <activity
-            android:name=".ui.RecipeStepVideoExplanationActivity"
+            android:name=".ui.RecipeStepVideoExplanationActivity" android:parentActivityName=".ui.RecipeDetailActivity"
             android:launchMode="singleTask" />
 
         <receiver android:name=".RecipeWidgetProvider">

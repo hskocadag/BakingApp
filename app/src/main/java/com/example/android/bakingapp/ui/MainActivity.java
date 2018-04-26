@@ -6,6 +6,10 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
+import android.support.test.espresso.IdlingResource;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -13,6 +17,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
+import com.example.android.bakingapp.IdlingResource.RecipeDownloadIdlingResource;
 import com.example.android.bakingapp.R;
 import com.example.android.bakingapp.RecipeAdapter;
 import com.example.android.bakingapp.RecipeWidgetProvider;
@@ -37,6 +42,8 @@ public class MainActivity extends AppCompatActivity implements RecipeAdapter.Gri
     private GridLayoutManager mGridLayoutManager;
     private final String LIST_STATE_KEY = "LIST_STATE_KEY";
     private Parcelable mListState;
+    @Nullable
+    private RecipeDownloadIdlingResource mIdlingResource;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,11 +63,14 @@ public class MainActivity extends AppCompatActivity implements RecipeAdapter.Gri
         mRecipesRecyclerView.setLayoutManager(mGridLayoutManager);
         mRecipeAdapter = new RecipeAdapter(this, this);
         mRecipesRecyclerView.setAdapter(mRecipeAdapter);
+
         loadRecipes();
     }
 
     private void loadRecipes()
     {
+        if(mIdlingResource != null)
+            mIdlingResource.setIdleState(false);
         new DownloadRecipesTask().execute();
     }
 
@@ -128,6 +138,8 @@ public class MainActivity extends AppCompatActivity implements RecipeAdapter.Gri
             mRecipes = result;
             RecipeData.Recipes = result;
             mRecipeAdapter.updateRecipesArray(mRecipes);
+            if(mIdlingResource != null)
+                mIdlingResource.setIdleState(true);
             mErrorMessage.setVisibility(View.GONE);
             mRecipesRecyclerView.setVisibility(View.VISIBLE);
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(MainActivity.this);
@@ -135,5 +147,14 @@ public class MainActivity extends AppCompatActivity implements RecipeAdapter.Gri
             //Trigger data update to handle the GridView widgets and force a data refresh
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_grid_view);
         }
+    }
+
+    @VisibleForTesting
+    @NonNull
+    public IdlingResource getIdlingResource() {
+        if (mIdlingResource == null) {
+            mIdlingResource = new RecipeDownloadIdlingResource();
+        }
+        return mIdlingResource;
     }
 }

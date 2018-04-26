@@ -26,6 +26,7 @@ public class RecipeStepListFragment extends Fragment{
 
     private GridLayoutManager mGridLayoutManager;
     private final String RECIPE_STEP_LIST_STATE_KEY = "RECIPE_STEP_LIST_STATE_KEY";
+    private final String RECIPE_ID_STATE_KEY = "RECIPE_ID_STATE_KEY";
     private Parcelable mListState;
 
     public RecipeStepListFragment () {
@@ -39,10 +40,15 @@ public class RecipeStepListFragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_master_recipe_step_list, container, false);
-        RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.rv_recipe_steps);
+        RecyclerView recyclerView = rootView.findViewById(R.id.rv_recipe_steps);
         Bundle b = getArguments();
-        if(b!= null)
+        if(savedInstanceState != null)
+        {
+            mListState = savedInstanceState.getParcelable(RECIPE_STEP_LIST_STATE_KEY);
+            mRecipeId = savedInstanceState.getInt(RECIPE_ID_STATE_KEY);
+        } else if(b!= null) {
             mRecipeId = b.getInt(RECIPE_ID, -1);
+        }
         // Create the adapter
         // This adapter takes in the context and an ArrayList of ALL the image resources to display
         mGridLayoutManager = new GridLayoutManager(getContext(), 1, GridLayoutManager.VERTICAL, false);
@@ -74,13 +80,16 @@ public class RecipeStepListFragment extends Fragment{
 
         mListState = mGridLayoutManager.onSaveInstanceState();
         outState.putParcelable(RECIPE_STEP_LIST_STATE_KEY, mListState);
+        outState.putInt(RECIPE_ID_STATE_KEY, mRecipeId);
     }
 
     @Override
     public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
-        if (savedInstanceState != null)
+        if (savedInstanceState != null) {
             mListState = savedInstanceState.getParcelable(RECIPE_STEP_LIST_STATE_KEY);
+            mRecipeId = savedInstanceState.getInt(RECIPE_ID_STATE_KEY);
+        }
     }
 
     private String ingredientListToString(List<Ingredient> ingredients) {

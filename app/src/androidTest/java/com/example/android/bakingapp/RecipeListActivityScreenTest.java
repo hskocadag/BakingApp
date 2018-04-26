@@ -43,7 +43,7 @@ public class RecipeListActivityScreenTest {
                 .perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
 
         onView(withId(R.id.rv_recipe_steps))
-                .check(matches(hasDescendant(withText("Starting prep"))));
+                .check(matches(hasDescendant(withText("1. Starting prep"))));
 
     }
 }

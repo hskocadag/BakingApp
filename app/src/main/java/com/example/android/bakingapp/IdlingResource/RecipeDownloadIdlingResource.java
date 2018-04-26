@@ -13,6 +13,13 @@ public class RecipeDownloadIdlingResource implements IdlingResource {
     // Idleness is controlled with this boolean.
     private AtomicBoolean mIsIdleNow = new AtomicBoolean(true);
 
+    public void setIdleState(boolean isIdleNow) {
+        mIsIdleNow.set(isIdleNow);
+        if (isIdleNow && mCallback != null) {
+            mCallback.onTransitionToIdle();
+        }
+    }
+
     @Override
     public String getName() {
         return this.getClass().getName();

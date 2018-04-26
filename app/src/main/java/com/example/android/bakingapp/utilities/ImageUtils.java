@@ -6,15 +6,16 @@ import android.widget.ImageView;
 import com.example.android.bakingapp.R;
 import com.squareup.picasso.Picasso;
 
-import java.net.URL;
+public final class ImageUtils {
 
-public class ImageUtils {
+    private ImageUtils(){}
+
     public static void insertImageIntoView(ImageView imageView, Context context, String imageUrl)
     {
         if(imageUrl == null || imageUrl.isEmpty()) {
             imageView.setImageResource(R.mipmap.default_baking_img);
             return;
         }
-        Picasso.with(context).load(imageUrl.toString()).placeholder(R.mipmap.default_baking_img).into(imageView);
+        Picasso.with(context).load(imageUrl).placeholder(R.mipmap.default_baking_img).into(imageView);
     }
 }

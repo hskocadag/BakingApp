@@ -26,6 +26,7 @@ import com.example.android.bakingapp.R;
 import com.example.android.bakingapp.RecipeStepAdapter;
 import com.example.android.bakingapp.data.RecipeData;
 import com.example.android.bakingapp.model.Step;
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -47,14 +48,16 @@ import com.google.android.exoplayer2.util.Util;
 
 
 public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.EventListener{
-    private static final String TAG = RecipeStepVideoExplanationActivity.class.getSimpleName();
+
     public static final String RECIPE_STEP_ID = "RECIPE_STEP_ID";
+    private final String RECIPE_STEP_ID_STATE_KEY = "RECIPE_STEP_ID_STATE_KEY";
+    private final String RECIPE_ID_STATE_KEY = "RECIPE_ID_STATE_KEY";
+    private final String RECIPE_VIDEO_STATE_KEY = "RECIPE_VIDEO_STATE_KEY";
+    private static final String TAG = RecipeStepVideoExplanationActivity.class.getSimpleName();
+
+    private long mVideoPosition = C.TIME_UNSET;
     private int mRecipeStepId = -1;
     private int mRecipeId = -1;
-    private SimpleExoPlayer mExoPlayer;
-    private SimpleExoPlayerView mPlayerView;
-    private static MediaSessionCompat mMediaSession;
-    private PlaybackStateCompat.Builder mStateBuilder;
     private TextView mRecipeLongDesc;
     private Button mNextButton;
     private Button mPrevButton;
@@ -62,8 +65,10 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     private boolean hasVideo;
     private LinearLayout mButtonPanel;
 
-    private final String RECIPE_STEP_ID_STATE_KEY = "RECIPE_STEP_ID_STATE_KEY";
-    private final String RECIPE_ID_STATE_KEY = "RECIPE_ID_STATE_KEY";
+    private SimpleExoPlayer mExoPlayer;
+    private SimpleExoPlayerView mPlayerView;
+    private static MediaSessionCompat mMediaSession;
+    private PlaybackStateCompat.Builder mStateBuilder;
 
     public RecipeStepVideoFragment () {
     }
@@ -82,17 +87,20 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_recipe_step_video, container, false);
 
-        mPlayerView = (SimpleExoPlayerView) rootView.findViewById(R.id.playerView);
-        mRecipeLongDesc = (TextView) rootView.findViewById(R.id.tv_recipe_step_long_desc);
-        mNextButton = (Button) rootView.findViewById(R.id.next_button);
-        mPrevButton = (Button) rootView.findViewById(R.id.prev_button);
-        mButtonPanel = (LinearLayout) rootView.findViewById(R.id.button_panel);
-
-        initializeMediaSession();
+        mPlayerView = rootView.findViewById(R.id.playerView);
+        mRecipeLongDesc = rootView.findViewById(R.id.tv_recipe_step_long_desc);
+        mNextButton = rootView.findViewById(R.id.next_button);
+        mPrevButton = rootView.findViewById(R.id.prev_button);
+        mButtonPanel = rootView.findViewById(R.id.button_panel);
 
         Bundle b = getArguments();
         if(b!= null && b.containsKey(RECIPE_STEP_ID)) {
             mRecipeStepId = b.getInt(RECIPE_STEP_ID, -1);
+        }
+        if (savedInstanceState != null) {
+            mRecipeStepId = savedInstanceState.getInt(RECIPE_STEP_ID_STATE_KEY, -1);
+            mRecipeId = savedInstanceState.getInt(RECIPE_ID_STATE_KEY, -1);
+            mVideoPosition = savedInstanceState.getLong(RECIPE_VIDEO_STATE_KEY);
         }
         if(mRecipeStepId == -1)
             mRecipeStepId = 0;
@@ -108,6 +116,7 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
                     Toast.LENGTH_SHORT).show();
             mPlayerView.setVisibility(View.GONE);
         } else {
+            initializeMediaSession();
             hasVideo = true;
             if(!step.getVideoURL().isEmpty())
                 initializePlayer(Uri.parse(step.getVideoURL()));
@@ -215,6 +224,8 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
             String userAgent = Util.getUserAgent(getContext(), "BakingApp");
             MediaSource mediaSource = new ExtractorMediaSource(mediaUri, new DefaultDataSourceFactory(
                     getContext(), userAgent), new DefaultExtractorsFactory(), null, null);
+            if (mVideoPosition != C.TIME_UNSET)
+                mExoPlayer.seekTo(mVideoPosition);
             mExoPlayer.prepare(mediaSource);
             mExoPlayer.setPlayWhenReady(true);
         }
@@ -237,9 +248,7 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
         mStateBuilder = new PlaybackStateCompat.Builder()
                 .setActions(
                         PlaybackStateCompat.ACTION_PLAY |
-                                PlaybackStateCompat.ACTION_PAUSE |
-                                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
-                                PlaybackStateCompat.ACTION_PLAY_PAUSE);
+                                PlaybackStateCompat.ACTION_PAUSE);
 
         mMediaSession.setPlaybackState(mStateBuilder.build());
 
@@ -258,6 +267,7 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
 
         outState.putInt(RECIPE_ID_STATE_KEY, mRecipeId);
         outState.putInt(RECIPE_STEP_ID_STATE_KEY, mRecipeStepId);
+        outState.putLong(RECIPE_VIDEO_STATE_KEY, mVideoPosition);
     }
 
     @Override
@@ -266,8 +276,20 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
         if (savedInstanceState != null) {
             mRecipeStepId = savedInstanceState.getInt(RECIPE_STEP_ID_STATE_KEY, -1);
             mRecipeId = savedInstanceState.getInt(RECIPE_ID_STATE_KEY, -1);
+            mVideoPosition = savedInstanceState.getLong(RECIPE_VIDEO_STATE_KEY);
         }
 
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mExoPlayer != null) {
+            mVideoPosition = mExoPlayer.getCurrentPosition();
+            mExoPlayer.stop();
+            mExoPlayer.release();
+            mExoPlayer = null;
+        }
     }
 
     private void releasePlayer() {
@@ -282,7 +304,8 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     public void onDestroy() {
         super.onDestroy();
         releasePlayer();
-        mMediaSession.setActive(false);
+        if(mMediaSession != null)
+            mMediaSession.setActive(false);
     }
 
     @Override

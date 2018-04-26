@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.MenuItem;
 
 import com.example.android.bakingapp.R;
 import com.example.android.bakingapp.data.RecipeData;
@@ -21,7 +22,7 @@ public class RecipeStepVideoExplanationActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recipe_step_video_explanation);
         Intent intent = getIntent();
-        if (intent != null) {
+        if (intent != null && intent.getExtras() != null) {
             Bundle b = intent.getExtras();
             mRecipeId = b.getInt(RecipeStepListFragment.RECIPE_ID, -1);
             mRecipeStepId = b.getInt(RecipeStepVideoFragment.RECIPE_STEP_ID, -1);
@@ -32,6 +33,24 @@ public class RecipeStepVideoExplanationActivity extends AppCompatActivity{
             mRecipeStepId = savedInstanceState.getInt(RECIPE_STEP_ID_STATE_KEY, -1);
         }
         startFragment();
+        if(getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(RecipeData.Recipes.get(mRecipeId).getSteps().get(mRecipeStepId).getShortDescription());
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        } else if(getActionBar() != null) {
+            getActionBar().setTitle(RecipeData.Recipes.get(mRecipeId).getSteps().get(mRecipeStepId).getShortDescription());
+            getActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            // Respond to the action bar's Up/Home button
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void startFragment() {
@@ -50,7 +69,7 @@ public class RecipeStepVideoExplanationActivity extends AppCompatActivity{
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        if(intent!=null){
+        if(intent!=null && intent.getExtras() != null){
             Bundle b = intent.getExtras();
             mRecipeId = b.getInt(RecipeStepListFragment.RECIPE_ID, -1);
             mRecipeStepId = b.getInt(RecipeStepVideoFragment.RECIPE_STEP_ID, -1);
