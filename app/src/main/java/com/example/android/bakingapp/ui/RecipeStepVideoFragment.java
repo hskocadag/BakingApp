@@ -18,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,6 +46,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+import com.squareup.picasso.Picasso;
 
 
 public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.EventListener{
@@ -53,9 +55,11 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     private final String RECIPE_STEP_ID_STATE_KEY = "RECIPE_STEP_ID_STATE_KEY";
     private final String RECIPE_ID_STATE_KEY = "RECIPE_ID_STATE_KEY";
     private final String RECIPE_VIDEO_STATE_KEY = "RECIPE_VIDEO_STATE_KEY";
+    private final String RECIPE_VIDEO_PLAY_STATE_KEY = "RECIPE_VIDEO_PLAY_STATE_KEY";
     private static final String TAG = RecipeStepVideoExplanationActivity.class.getSimpleName();
 
     private long mVideoPosition = C.TIME_UNSET;
+    private boolean mVideoPlayState;
     private int mRecipeStepId = -1;
     private int mRecipeId = -1;
     private TextView mRecipeLongDesc;
@@ -65,6 +69,7 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     private boolean hasVideo;
     private LinearLayout mButtonPanel;
 
+    private ImageView mThumbnailView;
     private SimpleExoPlayer mExoPlayer;
     private SimpleExoPlayerView mPlayerView;
     private static MediaSessionCompat mMediaSession;
@@ -88,11 +93,13 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
         final View rootView = inflater.inflate(R.layout.fragment_recipe_step_video, container, false);
 
         mPlayerView = rootView.findViewById(R.id.playerView);
+        mThumbnailView = rootView.findViewById(R.id.thumbnail_image);
         mRecipeLongDesc = rootView.findViewById(R.id.tv_recipe_step_long_desc);
         mNextButton = rootView.findViewById(R.id.next_button);
         mPrevButton = rootView.findViewById(R.id.prev_button);
         mButtonPanel = rootView.findViewById(R.id.button_panel);
 
+        mVideoPlayState = true;
         Bundle b = getArguments();
         if(b!= null && b.containsKey(RECIPE_STEP_ID)) {
             mRecipeStepId = b.getInt(RECIPE_STEP_ID, -1);
@@ -101,6 +108,7 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
             mRecipeStepId = savedInstanceState.getInt(RECIPE_STEP_ID_STATE_KEY, -1);
             mRecipeId = savedInstanceState.getInt(RECIPE_ID_STATE_KEY, -1);
             mVideoPosition = savedInstanceState.getLong(RECIPE_VIDEO_STATE_KEY);
+            mVideoPlayState = savedInstanceState.getBoolean(RECIPE_VIDEO_PLAY_STATE_KEY);
         }
         if(mRecipeStepId == -1)
             mRecipeStepId = 0;
@@ -110,18 +118,21 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
         }
         Step step = RecipeData.Recipes.get(mRecipeId).getSteps().get(mRecipeStepId);
 
-        if (step.getVideoURL() == null || (step.getVideoURL().isEmpty() && step.getThumbnailURL().isEmpty())) {
+        if (step.getVideoURL() == null || (step.getVideoURL().isEmpty() && (step.getThumbnailURL() == null || step.getThumbnailURL().isEmpty()))) {
             hasVideo = false;
             Toast.makeText(getContext(), "No video",
                     Toast.LENGTH_SHORT).show();
             mPlayerView.setVisibility(View.GONE);
         } else {
-            initializeMediaSession();
             hasVideo = true;
-            if(!step.getVideoURL().isEmpty())
+            if(!step.getVideoURL().isEmpty()) {
+                initializeMediaSession();
                 initializePlayer(Uri.parse(step.getVideoURL()));
-            else
+            }
+            else {
+                initializeMediaSession();
                 initializePlayer(Uri.parse(step.getThumbnailURL()));
+            }
         }
         mRecipeLongDesc.setText(step.getDescription());
         // Initialize the player.
@@ -224,10 +235,12 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
             String userAgent = Util.getUserAgent(getContext(), "BakingApp");
             MediaSource mediaSource = new ExtractorMediaSource(mediaUri, new DefaultDataSourceFactory(
                     getContext(), userAgent), new DefaultExtractorsFactory(), null, null);
+            mExoPlayer.prepare(mediaSource);
             if (mVideoPosition != C.TIME_UNSET)
                 mExoPlayer.seekTo(mVideoPosition);
-            mExoPlayer.prepare(mediaSource);
-            mExoPlayer.setPlayWhenReady(true);
+            else
+                mExoPlayer.seekTo(0);
+            mExoPlayer.setPlayWhenReady(mVideoPlayState);
         }
     }
 
@@ -268,6 +281,7 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
         outState.putInt(RECIPE_ID_STATE_KEY, mRecipeId);
         outState.putInt(RECIPE_STEP_ID_STATE_KEY, mRecipeStepId);
         outState.putLong(RECIPE_VIDEO_STATE_KEY, mVideoPosition);
+        outState.putBoolean(RECIPE_VIDEO_PLAY_STATE_KEY, mVideoPlayState);
     }
 
     @Override
@@ -285,6 +299,7 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     public void onPause() {
         super.onPause();
         if (mExoPlayer != null) {
+            mVideoPlayState = mExoPlayer.getPlayWhenReady();
             mVideoPosition = mExoPlayer.getCurrentPosition();
             mExoPlayer.stop();
             mExoPlayer.release();
@@ -309,6 +324,29 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        if(mRecipeId != -1 && mRecipeStepId != -1) {
+            Step step = RecipeData.Recipes.get(mRecipeId).getSteps().get(mRecipeStepId);
+            if (mExoPlayer == null) {
+                if (step.getVideoURL() == null || (step.getVideoURL().isEmpty() && step.getThumbnailURL().isEmpty())) {
+                    hasVideo = false;
+                    Toast.makeText(getContext(), "No video",
+                            Toast.LENGTH_SHORT).show();
+                    mPlayerView.setVisibility(View.GONE);
+                } else {
+                    initializeMediaSession();
+                    hasVideo = true;
+                    if(!step.getVideoURL().isEmpty())
+                        initializePlayer(Uri.parse(step.getVideoURL()));
+                    else
+                        initializePlayer(Uri.parse(step.getThumbnailURL()));
+                }
+            }
+        }
+    }
+
+    @Override
     public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
 
     }
@@ -325,7 +363,6 @@ public class RecipeStepVideoFragment extends Fragment implements ExoPlayer.Event
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-
     }
 
     @Override

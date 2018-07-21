@@ -1,42 +1,61 @@
-package com.example.android.bakingapp;
+package com.example.android.bakingapp.widget;
 
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
+import com.example.android.bakingapp.R;
 import com.example.android.bakingapp.data.RecipeData;
+import com.example.android.bakingapp.model.Ingredient;
 import com.example.android.bakingapp.model.Recipe;
+import com.example.android.bakingapp.ui.RecipeDetailActivity;
 import com.example.android.bakingapp.ui.RecipeStepListFragment;
+import com.google.android.exoplayer2.ExoPlayer;
 
 import java.util.List;
 
 public class GridWidgetService extends RemoteViewsService {
+
     @Override
     public RemoteViewsFactory onGetViewFactory(Intent intent) {
+        Bundle bundle = intent.getExtras();
+        int recipeId = -1;
+        if(bundle != null) {
+                recipeId = bundle.getInt(RecipeStepListFragment.RECIPE_ID, -1);
+                recipeId = recipeId == -1 ? RecipeData.widgetRecipeId : recipeId;
+        }
         return new GridRemoteViewsFactory(this.getApplicationContext());
     }
+
 }
 
 class GridRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
 
     Context mContext;
-    private List<Recipe> mRecipes;
+    private int mRecipeId;
+    private List<Ingredient> mIngredients;
 
     public GridRemoteViewsFactory(Context applicationContext) {
         mContext = applicationContext;
+        mRecipeId = RecipeData.widgetRecipeId;
     }
 
     @Override
     public void onCreate() {
-
     }
 
     //called on start and when notifyAppWidgetViewDataChanged is called
     @Override
     public void onDataSetChanged() {
-        mRecipes = RecipeData.Recipes;
+        mRecipeId = RecipeData.widgetRecipeId;
+        if(RecipeData.Recipes != null && mRecipeId >= 0 && mRecipeId < RecipeData.Recipes.size()) {
+            mIngredients = RecipeData.Recipes.get(mRecipeId).getIngredients();
+        } else
+            mIngredients = null;
+
     }
 
     @Override
@@ -46,8 +65,8 @@ class GridRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
 
     @Override
     public int getCount() {
-        if (mRecipes == null) return 0;
-        return mRecipes.size();
+        if (mRecipeId == -1 || mIngredients == null) return 0;
+        return mIngredients.size();
     }
 
     /**
@@ -58,19 +77,12 @@ class GridRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
      */
     @Override
     public RemoteViews getViewAt(int position) {
-        if (mRecipes == null || mRecipes.size() == 0 || mRecipes.size() <= position) return null;
-        Recipe recipe = mRecipes.get(position);
+        if (mIngredients == null || mIngredients.size() == 0 || position >= mIngredients.size()) return null;
 
         RemoteViews views = new RemoteViews(mContext.getPackageName(), R.layout.recipe_widget_provider);
-
-        views.setTextViewText(R.id.tv_widget_for_people, "For " + Integer.toString(recipe.getServings()));
-        views.setTextViewText(R.id.tv_widget_recipe_name, recipe.getName());
-
-        Bundle extras = new Bundle();
-        extras.putInt(RecipeStepListFragment.RECIPE_ID, position);
-        Intent fillInIntent = new Intent();
-        fillInIntent.putExtras(extras);
-        views.setOnClickFillInIntent(R.id.recipe_widget_layout, fillInIntent);
+        Ingredient ingredient = mIngredients.get(position);
+        String ingredientExp = ingredient.getQuantityStr() + " " + ingredient.getMeasure() + " " + ingredient.getIngredientName();
+        views.setTextViewText(R.id.tv_widget_recipe_name, ingredientExp);
 
         return views;
 

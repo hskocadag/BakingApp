@@ -6,4 +6,5 @@ import java.util.List;
 
 public class RecipeData {
     public static List<Recipe> Recipes;
+    public static int widgetRecipeId = -1;
 }

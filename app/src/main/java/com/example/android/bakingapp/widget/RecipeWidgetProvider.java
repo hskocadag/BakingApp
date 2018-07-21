@@ -1,13 +1,17 @@
-package com.example.android.bakingapp;
+package com.example.android.bakingapp.widget;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.widget.RemoteViews;
 
+import com.example.android.bakingapp.R;
+import com.example.android.bakingapp.data.RecipeData;
 import com.example.android.bakingapp.ui.RecipeDetailActivity;
+import com.example.android.bakingapp.ui.RecipeStepListFragment;
 
 /**
  * Implementation of App Widget functionality.
@@ -18,21 +22,18 @@ public class RecipeWidgetProvider extends AppWidgetProvider {
                                 int appWidgetId) {
 
         // Create an Intent to launch MainActivity when clicked
-        RemoteViews remoteViews = getRecipeGridRemoteView(context);
+        RemoteViews remoteViews = getRecipeStepsListGridRemoteView(context);
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
     }
 
-    private static RemoteViews getRecipeGridRemoteView(Context context) {
+    public static RemoteViews getRecipeStepsListGridRemoteView(Context context) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_grid_view);
         // Set the GridWidgetService intent to act as the adapter for the GridView
         Intent intent = new Intent(context, GridWidgetService.class);
+        Bundle bundle = new Bundle();
+        intent.putExtras(bundle);
         views.setRemoteAdapter(R.id.widget_grid_view, intent);
-        // Set the PlantDetailActivity intent to launch when clicked
-        Intent appIntent = new Intent(context, RecipeDetailActivity.class);
-        PendingIntent appPendingIntent = PendingIntent.getActivity(context, 0, appIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        views.setPendingIntentTemplate(R.id.widget_grid_view, appPendingIntent);
-        // Handle empty gardens
         views.setEmptyView(R.id.widget_grid_view, R.id.empty_view);
         return views;
     }

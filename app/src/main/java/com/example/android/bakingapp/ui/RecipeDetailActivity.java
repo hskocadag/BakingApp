@@ -1,13 +1,20 @@
 package com.example.android.bakingapp.ui;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.widget.RemoteViews;
 
 import com.example.android.bakingapp.R;
 import com.example.android.bakingapp.RecipeStepAdapter;
 import com.example.android.bakingapp.data.RecipeData;
+import com.example.android.bakingapp.widget.RecipeWidgetProvider;
 
 public class RecipeDetailActivity extends AppCompatActivity implements RecipeStepAdapter.OnRecipeStepClickListener {
 
@@ -15,9 +22,12 @@ public class RecipeDetailActivity extends AppCompatActivity implements RecipeSte
     private int mRecipeStepId = 0;
 
     private static boolean mTwoPane;
+    private static boolean mStateStored = false;
 
     private final String RECIPE_ID_STATE_KEY = "RECIPE_ID_STATE_KEY";
     private final String RECIPE_STEP_ID_STATE_KEY = "RECIPE_STEP_ID_STATE_KEY";
+
+    private MenuItem selectRecipeMenuItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +37,7 @@ public class RecipeDetailActivity extends AppCompatActivity implements RecipeSte
         Intent intent = getIntent();
         mRecipeId = -1;
         if(savedInstanceState != null) {
+            mStateStored = true;
             mRecipeId = savedInstanceState.getInt(RECIPE_ID_STATE_KEY);
             mRecipeStepId = savedInstanceState.getInt(RECIPE_STEP_ID_STATE_KEY, 0);
         } else if(intent != null && intent.getExtras() != null) {
@@ -34,11 +45,13 @@ public class RecipeDetailActivity extends AppCompatActivity implements RecipeSte
             mRecipeId = b.getInt(RecipeStepListFragment.RECIPE_ID, -1);
         }
         FragmentManager fragmentManager = getSupportFragmentManager();
-        RecipeStepListFragment recipeStepListFragment = new RecipeStepListFragment();
-        recipeStepListFragment.setRecipeId(mRecipeId);
-        fragmentManager.beginTransaction()
-                .replace(R.id.master_list_fragment, recipeStepListFragment)
-                .commit();
+        if(!mStateStored) {
+            RecipeStepListFragment recipeStepListFragment = new RecipeStepListFragment();
+            recipeStepListFragment.setRecipeId(mRecipeId);
+            fragmentManager.beginTransaction()
+                    .replace(R.id.master_list_fragment, recipeStepListFragment)
+                    .commit();
+        }
 
         if(getSupportActionBar() != null) {
             getSupportActionBar().setTitle(RecipeData.Recipes.get(mRecipeId).getName());
@@ -48,7 +61,7 @@ public class RecipeDetailActivity extends AppCompatActivity implements RecipeSte
             getActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        if(findViewById(R.id.baking_app_linear_layout) != null) {
+        if(!mStateStored && findViewById(R.id.baking_app_linear_layout) != null) {
             mTwoPane = true;
 
             RecipeStepVideoFragment recipeStepVideoFragment = new RecipeStepVideoFragment();
@@ -57,10 +70,38 @@ public class RecipeDetailActivity extends AppCompatActivity implements RecipeSte
             fragmentManager.beginTransaction()
                     .replace(R.id.video_explanation, recipeStepVideoFragment)
                     .commit();
-
+        } else if(mStateStored && findViewById(R.id.baking_app_linear_layout) != null) {
+            mTwoPane = true;
         } else {
             mTwoPane = false;
         }
+        if(mStateStored)
+            mStateStored = false;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.detail_actvity_menu, menu);
+        selectRecipeMenuItem = menu.getItem(0);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if(id == R.id.show_on_widget_menu_item)
+        {
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+            int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(this, RecipeWidgetProvider.class));
+            RecipeData.widgetRecipeId = mRecipeId;
+            //Trigger data update to handle the GridView widgets and force a data refresh
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_grid_view);
+
+        } else if(id == android.R.id.home) {
+            onBackPressed();
+        }
+        return true;
     }
 
     protected void onSaveInstanceState(Bundle state) {

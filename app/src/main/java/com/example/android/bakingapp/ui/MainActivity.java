@@ -20,7 +20,7 @@ import android.widget.TextView;
 import com.example.android.bakingapp.IdlingResource.RecipeDownloadIdlingResource;
 import com.example.android.bakingapp.R;
 import com.example.android.bakingapp.RecipeAdapter;
-import com.example.android.bakingapp.RecipeWidgetProvider;
+import com.example.android.bakingapp.widget.RecipeWidgetProvider;
 import com.example.android.bakingapp.data.RecipeData;
 import com.example.android.bakingapp.model.Recipe;
 import com.example.android.bakingapp.utilities.NetworkUtils;

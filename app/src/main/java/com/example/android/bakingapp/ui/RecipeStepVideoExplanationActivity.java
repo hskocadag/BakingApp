@@ -31,8 +31,9 @@ public class RecipeStepVideoExplanationActivity extends AppCompatActivity{
         {
             mRecipeId = savedInstanceState.getInt(RECIPE_ID_STATE_KEY, -1);
             mRecipeStepId = savedInstanceState.getInt(RECIPE_STEP_ID_STATE_KEY, -1);
+        } else {
+            startFragment();
         }
-        startFragment();
         if(getSupportActionBar() != null) {
             getSupportActionBar().setTitle(RecipeData.Recipes.get(mRecipeId).getSteps().get(mRecipeStepId).getShortDescription());
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);

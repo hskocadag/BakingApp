@@ -7,10 +7,12 @@
     <string name="dummy_recipe_name">Recipe Name</string>
     <string name="ingredients_introduction">Ingredients Introduction</string>
 
+    <string name="show_on_widget_menu_item">Show on widget!</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="play_button">Play button</string>
     <string name="stop_button">Stop button</string>
-    <string name="empty_view_text">No recipes to show!</string>
+    <string name="empty_view_text">No recipe selected!</string>
     <string name="next_step_button">Next Step</string>
     <string name="prev_step_button">Previous Step</string>
 
